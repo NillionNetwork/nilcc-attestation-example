@@ -19,6 +19,7 @@ fi
 VCPUS=${VCPUS:-1}
 NILCC_VERSION=${NILCC_VERSION:-0.2.1}
 MANIFEST_KEY=${MANIFEST_KEY:-$NILCC_VERSION}
+ALLOWED_DOMAINS= [ "nilcc.nillion.com", "github.com", "attestation-test.vercel.com"]
 
 MEASUREMENT_HASH=$(
   docker run -v/tmp/nilcc-verifier-cache:/tmp/nilcc-verifier-cache --rm \
@@ -38,7 +39,8 @@ jq \
   --arg measurement "$MEASUREMENT_HASH" \
   --arg compose "$DOCKER_COMPOSE_HASH" \
   --argjson cpus "$VCPUS" \
-  '.[$key] = {measurement_hash: $measurement, docker_compose_hash: $compose, cpus: $cpus, nilcc_version: $version}' \
+  --argjson allowedDomains "$ALLOWED_DOMAINS" \
+  '.[$key] = {measurement_hash: $measurement, docker_compose_hash: $compose, cpus: $cpus, nilcc_version: $version, , allowedDomains: $allowedDomains} ' \
   "$VERIFICATION_FILE" > "$TMP_FILE"
 mv "$TMP_FILE" "$VERIFICATION_FILE"
 
