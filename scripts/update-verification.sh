@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR/.."
-COMPOSE_FILE="$ROOT_DIR/docker-compose.yml"
+COMPOSE_FILE="$ROOT_DIR/docker-compose.yaml"
 VERIFICATION_FILE="$ROOT_DIR/verification-manifest.json"
 
 if command -v sha256sum >/dev/null 2>&1; then
