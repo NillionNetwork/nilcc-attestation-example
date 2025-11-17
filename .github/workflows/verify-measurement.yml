@@ -12,9 +12,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    defaults:
-      run:
-        working-directory: tee-storage-and-agent
 
     steps:
       - name: Checkout code
