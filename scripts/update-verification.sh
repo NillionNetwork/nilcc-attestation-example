@@ -28,20 +28,12 @@ MEASUREMENT_HASH=$(
   | tr -d '\r\n'
 )
 
-if [ ! -f "$VERIFICATION_FILE" ]; then
-  echo "{}" > "$VERIFICATION_FILE"
-fi
-
-TMP_FILE=$(mktemp)
-jq \
+jq -n \
   --arg key "$MANIFEST_KEY" \
   --arg version "$NILCC_VERSION" \
   --arg measurement "$MEASUREMENT_HASH" \
   --arg compose "$DOCKER_COMPOSE_HASH" \
   --argjson cpus "$VCPUS" \
   --argjson allowedDomains "$ALLOWED_DOMAINS" \
-  '.[$key] = {measurement_hash: $measurement, docker_compose_hash: $compose, cpus: $cpus, nilcc_version: $version, allowedDomains: $allowedDomains}' \
-  "$VERIFICATION_FILE" > "$TMP_FILE"
-mv "$TMP_FILE" "$VERIFICATION_FILE"
-
-jq --arg key "$MANIFEST_KEY" '.[$key]' "$VERIFICATION_FILE"
+  '{($key): {measurement_hash: $measurement, docker_compose_hash: $compose, cpus: $cpus, nilcc_version: $version, allowedDomains: $allowedDomains}}' \
+  > "$VERIFICATION_FILE"
