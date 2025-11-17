@@ -53,7 +53,7 @@ jobs:
 
             Generated automatically by the verification-manifest workflow.
           add-paths: |
-            tee-storage-and-agent/verification-manifest.json
+            verification-manifest.json
           branch: update-verification-${{ steps.get-version.outputs.version }}
           base: main
           delete-branch: true
