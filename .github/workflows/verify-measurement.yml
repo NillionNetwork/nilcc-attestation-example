@@ -1,0 +1,65 @@
+name: Update Verification Manifest
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  update-verification:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get-version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${VERSION#v}
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extracted version: $VERSION"
+
+      - name: Update verification manifest
+        id: update-manifest
+        env:
+          MANIFEST_KEY: ${{ steps.get-version.outputs.version }}
+        run: |
+          chmod +x scripts/update-verification.sh
+          ./scripts/update-verification.sh > /dev/null
+          HASH=$(jq -r --arg key "$MANIFEST_KEY" '.[$key].measurement_hash' verification-manifest.json)
+          COMPOSE=$(jq -r --arg key "$MANIFEST_KEY" '.[$key].docker_compose_hash' verification-manifest.json)
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          echo "compose=$COMPOSE" >> "$GITHUB_OUTPUT"
+          echo "measurement hash: $HASH"
+          echo "Updated verification-manifest.json:"
+          cat verification-manifest.json
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update verification manifest for ${{ steps.get-version.outputs.version }}"
+          title: "Update verification manifest for ${{ steps.get-version.outputs.version }}"
+          body: |
+            This PR publishes the verification inputs for version ${{ steps.get-version.outputs.version }}.
+
+            - Measurement hash: `${{ steps.update-manifest.outputs.hash }}`
+            - Docker Compose hash: `${{ steps.update-manifest.outputs.compose }}`
+
+            Generated automatically by the verification-manifest workflow.
+          add-paths: |
+            verification-manifest.json
+          branch: update-verification-${{ steps.get-version.outputs.version }}
+          base: main
+          delete-branch: true
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          sign-commits: true
