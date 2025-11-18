@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'Nilcc Attestation Example',
+  description: 'Nillion Network attestation example',
+}
+
 export default function RootLayout({
     children,
   }: {
