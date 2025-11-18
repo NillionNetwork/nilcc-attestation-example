@@ -12,13 +12,12 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    defaults:
-      run:
-        working-directory: tee-storage-and-agent
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get version from tag
         id: get-version
@@ -33,8 +32,9 @@ jobs:
         env:
           MANIFEST_KEY: ${{ steps.get-version.outputs.version }}
         run: |
-          chmod +x scripts/update-verification-manifest.sh
-          HASH=$(./scripts/update-verification-manifest.sh)
+          chmod +x scripts/update-verification.sh
+          ./scripts/update-verification.sh > /dev/null
+          HASH=$(jq -r --arg key "$MANIFEST_KEY" '.[$key].measurement_hash' verification-manifest.json)
           COMPOSE=$(jq -r --arg key "$MANIFEST_KEY" '.[$key].docker_compose_hash' verification-manifest.json)
           echo "hash=$HASH" >> "$GITHUB_OUTPUT"
           echo "compose=$COMPOSE" >> "$GITHUB_OUTPUT"
@@ -56,7 +56,7 @@ jobs:
 
             Generated automatically by the verification-manifest workflow.
           add-paths: |
-            tee-storage-and-agent/verification-manifest.json
+            verification-manifest.json
           branch: update-verification-${{ steps.get-version.outputs.version }}
           base: main
           delete-branch: true
